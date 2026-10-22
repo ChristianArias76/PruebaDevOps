@@ -3,6 +3,7 @@
   --color-texto: #1f2933;
   --color-primario: #1e5aa8;
   --color-borde: #d9dee5;
+  --color-error: #b42318;
 }
 
 * {
@@ -38,6 +39,10 @@ body {
 .estado {
   color: var(--color-primario);
   font-weight: 600;
+}
+
+.estado--error {
+  color: var(--color-error);
 }
 
 .footer {
