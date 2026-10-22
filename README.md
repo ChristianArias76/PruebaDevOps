@@ -36,7 +36,8 @@ public/
   css/styles.css
   js/app.js
 test/
-  server.test.js pruebas con node:test
+  server.test.js pruebas del servidor con node:test
+  app.test.js    pruebas del front (indicador de estado)
 server.js      servidor estático sin dependencias
 package.json
 ```
