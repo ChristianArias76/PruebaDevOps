@@ -3,6 +3,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const { version: VERSION } = require('./package.json');
+
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -22,12 +24,20 @@ const SECURITY_HEADERS = {
   'Referrer-Policy': 'no-referrer',
 };
 
-function send(res, status, body, type = 'text/plain; charset=utf-8') {
-  res.writeHead(status, { 'Content-Type': type, ...SECURITY_HEADERS });
+function send(res, status, body, type = 'text/plain; charset=utf-8', extraHeaders = {}) {
+  res.writeHead(status, { 'Content-Type': type, ...SECURITY_HEADERS, ...extraHeaders });
   res.end(body);
 }
 
-const server = http.createServer((req, res) => {
+// Health check (HU-09): solo estado y versión, sin datos del entorno ni del sistema.
+function health(req, res) {
+  const body = JSON.stringify({ status: 'ok', version: VERSION });
+  send(res, 200, req.method === 'HEAD' ? undefined : body, 'application/json; charset=utf-8', {
+    'Cache-Control': 'no-store',
+  });
+}
+
+function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return send(res, 405, 'Método no permitido');
   }
@@ -38,6 +48,7 @@ const server = http.createServer((req, res) => {
   } catch {
     return send(res, 400, 'Solicitud inválida');
   }
+  if (urlPath === '/health') return health(req, res);
   if (urlPath === '/') urlPath = '/index.html';
 
   // Evita salir de /public (path traversal).
@@ -55,8 +66,17 @@ const server = http.createServer((req, res) => {
     const type = MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
     send(res, 200, req.method === 'HEAD' ? undefined : data, type);
   });
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
+function createServer() {
+  return http.createServer(handler);
+}
+
+// Solo escucha cuando se ejecuta directo (npm start); las pruebas importan createServer.
+if (require.main === module) {
+  createServer().listen(PORT, () => {
+    console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  });
+}
+
+module.exports = { createServer };
