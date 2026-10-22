@@ -1,0 +1,25 @@
+{
+  "name": "pruebadevops",
+  "version": "1.0.0",
+  "description": "Proyecto base en HTML, CSS y JavaScript para pruebas de DevOps",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Sin pruebas definidas todavía\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChristianArias76/PruebaDevOps.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "bugs": {
+    "url": "https://github.com/ChristianArias76/PruebaDevOps/issues"
+  },
+  "homepage": "https://github.com/ChristianArias76/PruebaDevOps#readme"
+}
