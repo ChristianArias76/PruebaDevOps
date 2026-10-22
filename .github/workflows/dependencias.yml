@@ -1,0 +1,82 @@
+name: Dependencias
+
+# Análisis de dependencias de Node (SCA) — HU-04.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Lunes 06:00 UTC: detecta vulnerabilidades nuevas aunque el código no cambie.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+# CS-01.3: el token del workflow solo puede leer el repositorio.
+permissions:
+  contents: read
+
+concurrency:
+  group: dependencias-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  auditoria:
+    name: Auditoría npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Configurar Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      # CS-04.4: npm ci falla si package-lock.json no coincide con package.json.
+      - name: Instalar dependencias desde el lockfile
+        run: npm ci --ignore-scripts
+
+      # CS-04.1: dependencias de producción fallan desde severidad moderada.
+      - name: Auditar dependencias de producción
+        run: npm audit --omit=dev --audit-level=moderate
+
+      # Dependencias de desarrollo: fallan desde severidad alta.
+      - name: Auditar todas las dependencias
+        run: npm audit --audit-level=high
+
+      # Verifica firmas y procedencia del registro; se omite si aún no hay dependencias.
+      - name: Verificar firmas de paquetes
+        run: |
+          if node -e "process.exit(Object.keys(require('./package-lock.json').packages).length > 1 ? 0 : 1)"; then
+            npm audit signatures
+          else
+            echo "Sin dependencias instaladas: no hay firmas que verificar."
+          fi
+
+      # Informativo: no bloquea, deja el reporte en el resumen del job.
+      - name: Reportar dependencias desactualizadas
+        run: |
+          {
+            echo "## Dependencias desactualizadas"
+            echo '```'
+            npm outdated --long || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  revision-pr:
+    name: Revisión de dependencias del PR
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Bloquea el PR si agrega dependencias con vulnerabilidades altas o críticas.
+      - name: Revisar dependencias nuevas o modificadas
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          fail-on-scopes: runtime, development
