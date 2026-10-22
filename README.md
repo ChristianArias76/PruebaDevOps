@@ -4,7 +4,7 @@ Proyecto base en HTML, CSS y JavaScript para pruebas de DevOps.
 
 ## Requisitos
 
-- Node.js 18 o superior
+- Node.js 20 o superior
 
 ## Uso
 
@@ -22,6 +22,11 @@ Abre http://localhost:3000 (el puerto se cambia con la variable `PORT`).
 npm test
 npm run test:coverage
 ```
+
+## Integración continua
+
+El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) ejecuta las pruebas
+con cobertura en cada push y en cada pull request hacia `main`, sobre Node 20, 22 y 24.
 
 ## Estructura
 

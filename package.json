@@ -17,7 +17,7 @@
   "license": "ISC",
   "type": "commonjs",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "bugs": {
     "url": "https://github.com/ChristianArias76/PruebaDevOps/issues"
